@@ -1,6 +1,20 @@
 package com.github.happylynx.prick.lib.verbosity;
 
-public interface ProgressReceiver {
-    void message(String message);
-    void estimation(float percentage, int etaSeconds);
+import java.io.Closeable;
+
+public interface ProgressReceiver extends Closeable {
+    default void message(String message) {
+        message(message, Verbosity.INFO);
+    }
+    void message(String message, Verbosity verbosity);
+    void eta(int seconds);
+    void partDone(int percentage);
+    ProgressReceiver subTask(String subTaskName, float weight);
+
+    enum Verbosity {
+        ERROR,
+        WARNING,
+        INFO,
+        DEBUG
+    }
 }

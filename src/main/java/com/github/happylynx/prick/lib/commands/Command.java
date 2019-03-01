@@ -19,8 +19,4 @@ public interface Command {
     default void progressMessage(String message) {
         getProgressReceivers().forEach((receiver, registration) -> receiver.message(message));
     }
-
-    default void progressEstimation(float percentage, int etaSeconds) {
-        getProgressReceivers().forEach((receiver, registration) -> receiver.estimation(percentage, etaSeconds));
-    }
 }

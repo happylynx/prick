@@ -6,4 +6,9 @@ public class HashId {
     public HashId(String hash) {
         this.hash = hash;
     }
+
+    @Override
+    public String toString() {
+        return hash;
+    }
 }

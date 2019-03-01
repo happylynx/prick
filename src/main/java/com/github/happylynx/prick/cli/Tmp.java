@@ -1,5 +1,8 @@
 package com.github.happylynx.prick.cli;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SeekableByteChannel;
@@ -7,15 +10,23 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.util.EnumSet;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 public class Tmp {
     public static void main(String[] args) throws IOException {
-        writeFile();
-        readFile();
+        final var tmp = new Tmp();
+        tmp.m("");
+    }
 
-        demoCompletableFuture();
+    private static void testJsonString() throws IOException {
+        String result = new ObjectMapper().writeValueAsString("ahoj \\svete");
+        String parsedResult = new ObjectMapper().readValue(result, String.class);
+        System.out.println(result);
+        System.out.println(parsedResult);
     }
 
     private static void demoCompletableFuture() {
@@ -54,5 +65,13 @@ public class Tmp {
         } catch (IOException ex) {
             throw new RuntimeException(ex);
         }
+    }
+
+    private void m(String s) {
+        System.out.println("string");
+    }
+
+    private void m(int i) {
+        System.out.println("int");
     }
 }

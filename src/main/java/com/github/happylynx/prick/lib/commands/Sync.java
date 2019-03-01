@@ -16,7 +16,7 @@ public class Sync implements Command {
     }
 
     public void run() {
-        new SnapshotCommand().run();
+//        new SnapshotCommand().run();
     }
 
     @Override
