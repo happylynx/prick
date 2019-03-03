@@ -1,8 +1,5 @@
 package com.github.happylynx.prick.cli;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SeekableByteChannel;
@@ -20,13 +17,6 @@ public class Tmp {
     public static void main(String[] args) throws IOException {
         final var tmp = new Tmp();
         tmp.m("");
-    }
-
-    private static void testJsonString() throws IOException {
-        String result = new ObjectMapper().writeValueAsString("ahoj \\svete");
-        String parsedResult = new ObjectMapper().readValue(result, String.class);
-        System.out.println(result);
-        System.out.println(parsedResult);
     }
 
     private static void demoCompletableFuture() {

@@ -1,5 +1,6 @@
 package com.github.happylynx.prick.lib.model;
 
+import com.github.happylynx.prick.lib.commands.PrickContext;
 import com.github.happylynx.prick.lib.walking.FsEntry;
 import com.github.happylynx.prick.lib.walking.FsNonDirEntryType;
 
@@ -62,8 +63,8 @@ public class IndexItem implements TreeItem {
                 .collect(Collectors.joining("/"));
     }
 
-    public static IndexItem fromFsEntry(FsEntry fsEntry, Path prickRoot, Index oldIndex) {
-        final Path path = prickRoot.relativize(fsEntry.getPath());
+    public static IndexItem fromFsEntry(FsEntry fsEntry, PrickContext ctx, Index oldIndex) {
+        final Path path = ctx.getRootDir().relativize(fsEntry.getPath());
         final Optional<IndexItem> oldIndexItemOptional = oldIndex.get(path);
         final Boolean itemUnchanged = oldIndexItemOptional
                 .map(indexItem -> indexItem.getChangeTime().equals(fsEntry.getModifiedTime()))

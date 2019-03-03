@@ -82,6 +82,7 @@ public class Utils {
 
     }
 
+    @Deprecated // TODO fix
     static void lock(Path prickRoot) {
         synchronized (Singleton.INSTANCE.fileLocked) {
             final Path lockFile = FileNames.lock(prickRoot);
@@ -124,7 +125,7 @@ public class Utils {
                 .filter(handle -> handle.pid() == lockingPid && handle.isAlive())
                 .findAny();
         if (lockingProcess.isPresent()) {
-            throw new LockByOtherProcessException(lockFile, lockingProcess.get());
+            throw new LockedByOtherProcessException(lockFile, lockingProcess.get());
         }
         try {
             createLockFile(lockFile, true);
@@ -133,34 +134,36 @@ public class Utils {
         }
     }
 
-    public static void withLock(Runnable task, Path prickRoot) {
-        final UUID lockId = UUID.randomUUID();
-        try {
-            Singleton.INSTANCE.lockers.add(lockId);
-            if (!Singleton.INSTANCE.fileLocked.get()) {
-                lock(prickRoot);
-            }
-            task.run();
-        }
-        finally {
-            Singleton.INSTANCE.lockers.remove(lockId);
-            freeLock(prickRoot);
-        }
-    }
+    // TODO delete
+//    public static void withLock(Runnable task, Path prickRoot) {
+//        final UUID lockId = UUID.randomUUID();
+//        try {
+//            Singleton.INSTANCE.lockers.add(lockId);
+//            if (!Singleton.INSTANCE.fileLocked.get()) {
+//                lock(prickRoot);
+//            }
+//            task.run();
+//        }
+//        finally {
+//            Singleton.INSTANCE.lockers.remove(lockId);
+//            freeLock(prickRoot);
+//        }
+//    }
 
-    private static void freeLock(Path prickRoot) {
-        synchronized (Singleton.INSTANCE.fileLocked) {
-            if (!Singleton.INSTANCE.lockers.isEmpty()) {
-                return;
-            }
-            try {
-                Files.delete(FileNames.lock(prickRoot));
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-            Singleton.INSTANCE.fileLocked.set(false);
-        }
-    }
+    // TODO delete
+//    private static void freeLock(Path prickRoot) {
+//        synchronized (Singleton.INSTANCE.fileLocked) {
+//            if (!Singleton.INSTANCE.lockers.isEmpty()) {
+//                return;
+//            }
+//            try {
+//                Files.delete(FileNames.lock(prickRoot));
+//            } catch (IOException e) {
+//                throw new RuntimeException(e);
+//            }
+//            Singleton.INSTANCE.fileLocked.set(false);
+//        }
+//    }
 
     private static Iterator<FsEntry> dirIterator(Path root) {
         final DirectoryWalker directoryWalker = new DirectoryWalker(root);
@@ -201,7 +204,7 @@ public class Utils {
         }
     }
 
-    private static boolean isPrickRoot(Path path) {
+    public static boolean isPrickRoot(Path path) {
         return Files.isDirectory(path, LinkOption.NOFOLLOW_LINKS)
                 && Files.isDirectory(FileNames.prickDir(path));
     }

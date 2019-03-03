@@ -9,11 +9,14 @@ import java.util.stream.Collectors;
 public class IndexToTree {
 
     private final Stack<TreeItem> stack = new Stack<>();
+    private final PrickContext ctx;
 
-    private IndexToTree() {}
+    private IndexToTree(PrickContext ctx) {
+        this.ctx = ctx;
+    }
 
-    public static HashId convert(Index index) {
-        final IndexToTree indexToTree = new IndexToTree();
+    public static HashId writeTree(Index index, PrickContext ctx) {
+        final IndexToTree indexToTree = new IndexToTree(ctx);
         index.getItems().stream().forEachOrdered(indexToTree::nextItem);
         indexToTree.finish();
         return indexToTree.getResult();
@@ -29,7 +32,7 @@ public class IndexToTree {
 
     private HashId getResult() {
         if (stack.isEmpty()) {
-            return ObjectStorage.store("", pri);
+            return ObjectStorage.store("", ctx);
         }
         return stack.pop().getHash();
     }
@@ -53,7 +56,7 @@ public class IndexToTree {
         final String treeFileContent = items.stream()
                 .map(FileFormats::createTreeLine)
                 .collect(Collectors.joining(FileFormats.LINE_SEPARATOR));
-        final HashId treeHash = ObjectStorage.store(treeFileContent);
+        final HashId treeHash = ObjectStorage.store(treeFileContent, ctx);
         return new TreeHash(treeHash, items.get(0).getPath().getParent());
     }
 

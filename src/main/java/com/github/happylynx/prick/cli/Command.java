@@ -1,11 +1,22 @@
 package com.github.happylynx.prick.cli;
 
-import com.github.happylynx.prick.lib.commands.Sync;
+import com.github.happylynx.prick.lib.commands.SyncComamnd;
+
+import java.nio.file.Path;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 // TODO https://picocli.info/
 class Command {
 
+    private static final int GENERAL_ERROR_CODE = 1;
+
     void run(String[] args) {
+        if (args.length == 0) {
+            helpCommand();
+            return;
+        }
         final String firstArgument = args[0];
         if (firstArgument == null || "help".equals(firstArgument) || "--help".equals(firstArgument)) {
             helpCommand();
@@ -23,7 +34,15 @@ class Command {
     }
 
     private void syncCommand(String[] args) {
-
+        if (args.length < 3) {
+            HelpKt.sync();
+            System.exit(GENERAL_ERROR_CODE);
+        }
+        final List<Path> paths = Stream.of(args)
+                .skip(1) // "sync"
+                .map(arg -> Path.of(arg).toAbsolutePath())
+                .collect(Collectors.toList());
+        new SyncComamnd(paths, Path.of(".")).run();
     }
 
     private void versionOptionCommand(String[] args) {
@@ -33,6 +52,7 @@ class Command {
     private void unknownCommand(String[] args) {
         System.out.println("Unknown commands: " + String.join(" ", args));
         helpCommand();
+        System.exit(GENERAL_ERROR_CODE);
     }
 
     private void helpCommand() {

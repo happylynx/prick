@@ -2,6 +2,7 @@ package com.github.happylynx.prick.lib.model;
 
 import com.github.happylynx.prick.lib.Utils;
 import com.github.happylynx.prick.lib.commands.FileFormats;
+import com.github.happylynx.prick.lib.commands.PrickContext;
 
 import java.nio.file.Path;
 import java.time.Instant;
@@ -36,12 +37,12 @@ public class Index {
                 .collect(Collectors.joining(FileFormats.LINE_SEPARATOR));
     }
 
-    public static Index fromDisk(Path root, Path prickRoot, Index oldIndex) {
+    public static Index fromDisk(Path root, PrickContext ctx, Index oldIndex) {
         final SortedMap<Path, IndexItem> indexItems = Utils.dirStream(root)
                 .parallel()
-                .map(fsEntry -> IndexItem.fromFsEntry(fsEntry, prickRoot, oldIndex))
+                .map(fsEntry -> IndexItem.fromFsEntry(fsEntry, ctx, oldIndex))
                 .collect(toSortedMap());
-        return new Index(indexItems, prickRoot.relativize(root));
+        return new Index(indexItems, ctx.getRootDir().relativize(root));
     }
 
     public Collection<IndexItem> getItems() {

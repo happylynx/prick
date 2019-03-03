@@ -7,14 +7,14 @@ public interface ProgressReceiver extends Closeable {
         message(message, Verbosity.INFO);
     }
     void message(String message, Verbosity verbosity);
-    void eta(int seconds);
+//    void eta(int seconds);
     void partDone(int percentage);
     ProgressReceiver subTask(String subTaskName, float weight);
 
     enum Verbosity {
-        ERROR,
-        WARNING,
+        DEBUG,
         INFO,
-        DEBUG
+        WARNING,
+        ERROR,
     }
 }

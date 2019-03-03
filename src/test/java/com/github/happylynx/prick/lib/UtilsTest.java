@@ -5,14 +5,12 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class UtilsTest {
 
-    private static long NONEXISTING_PID = 1_000_000;
+    private static long NONEXISTING_PID = -1;
 
     @Test
     void lockCreatedIfNonexistent() throws IOException {
@@ -50,7 +48,7 @@ class UtilsTest {
                 .pid();
         createLockFile(tmpDir, otherProcessPid);
 
-        assertThrows(LockByOtherProcessException.class, () -> Utils.lock(tmpDir));
+        assertThrows(LockedByOtherProcessException.class, () -> Utils.lock(tmpDir));
     }
 
     @Test

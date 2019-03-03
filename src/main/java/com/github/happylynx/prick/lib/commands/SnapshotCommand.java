@@ -1,18 +1,13 @@
 package com.github.happylynx.prick.lib.commands;
 
-import com.github.happylynx.prick.lib.FileNames;
-import com.github.happylynx.prick.lib.Singleton;
-import com.github.happylynx.prick.lib.Utils;
 import com.github.happylynx.prick.lib.model.HashId;
 import com.github.happylynx.prick.lib.model.Index;
-import com.github.happylynx.prick.lib.verbosity.ProgressReceiver;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.Collections;
-import java.util.Optional;
 import java.util.stream.Stream;
 
 /**
@@ -29,14 +24,12 @@ import java.util.stream.Stream;
  */
 public class SnapshotCommand {
 
-    private final Path snapshotRoot;
-//    private final Path prickDir;
+    private final Path relativeSnapshotRoot;
+    private final PrickContext ctx;
 
-    public SnapshotCommand(Params params) {
-        snapshotRoot = params.snapshotRoot;
-        prickRoot = Optional.ofNullable(params.prickRoot)
-                .orElseGet(() -> Utils.findPrickRoot(snapshotRoot));
-        Singleton.INSTANCE.setPrickRoot(prickRoot);
+    public SnapshotCommand(PrickContext ctx, Path relativeSnapshotRoot) {
+        this.relativeSnapshotRoot = relativeSnapshotRoot;
+        this.ctx = ctx;
         validate();
     }
 
@@ -45,18 +38,18 @@ public class SnapshotCommand {
     }
 
     // TODO add file level locking
-    public void run(ProgressReceiver progressReceiver) {
-        Utils.withLock(() -> runLocked(progressReceiver), prickRoot);
+    public void run() {
+        ctx.withLock(this::runLocked);
     }
 
-    private void runLocked(ProgressReceiver progressReceiver) {
+    private void runLocked() {
         Index newIndex = createUpdatedIndex();
         storeIndex(newIndex);
         commitIndex(newIndex);
     }
 
     private HashId commitIndex(Index index) {
-        HashId rootTreeId = IndexToTree.convert(index);
+        HashId rootTreeId = IndexToTree.writeTree(index, ctx);
         return createCommitFile(rootTreeId);
     }
 
@@ -69,32 +62,33 @@ public class SnapshotCommand {
     }
 
     private HashId createCommitFileUnchecked(HashId rootTreeId) throws IOException {
-        final Path commitPath = FileNames.head(prickRoot);
-        final String currentCommitId = Files.readString(commitPath);
+        final Path headFile = ctx.getFiles().getHead();
+        final String currentCommitId = Files.readString(headFile);
         final String commitContent = FileFormats.createCommit(rootTreeId, currentCommitId);
-        final HashId commitHash = ObjectStorage.store(commitContent, prickRoot);
-        Files.writeString(commitPath, commitHash.toString());
+        final HashId commitHash = ObjectStorage.store(commitContent, ctx);
+        Files.writeString(headFile, commitHash.toString());
         return commitHash;
     }
 
     private void storeIndex(Index index) {
         try {
-            Files.write(FileNames.index(prickRoot), index.toLines().getBytes());
+            Files.write(ctx.getFiles().getIndex(), index.toLines().getBytes());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
     private Index createUpdatedIndex() {
-        final Index oldIndex = loadIndex(prickRoot);
-        final Index newPartialIndex = Index.fromDisk(snapshotRoot, prickRoot, oldIndex);
+        final Index oldIndex = loadIndex();
+        final Index newPartialIndex = Index.fromDisk(ctx.getRootDir().resolve(relativeSnapshotRoot), ctx, oldIndex);
         final Index newIndex = oldIndex.combineWith(newPartialIndex);
         return newIndex;
 
     }
 
-    private Index loadIndex(Path prickRoot) {
-        final Path indexPath = prickRoot.resolve("index");
+    private Index loadIndex() {
+        // TODO use FileFormats
+        final Path indexPath = ctx.getFiles().getIndex();
         try (Stream<String> lines = Files.lines(indexPath)) {
             return Index.fromLines(lines);
         } catch (NoSuchFileException e) {

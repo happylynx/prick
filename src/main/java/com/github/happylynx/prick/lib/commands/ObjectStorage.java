@@ -15,13 +15,13 @@ public class ObjectStorage {
 
     private ObjectStorage() {}
 
-    public static HashId store(String content, Path prickRoot) {
-        return store(content.getBytes(StandardCharsets.UTF_8), prickRoot);
+    public static HashId store(String content, PrickContext ctx) {
+        return store(content.getBytes(StandardCharsets.UTF_8), ctx);
     }
 
-    private static HashId store(byte[] bytes, Path prickRoot) {
+    private static HashId store(byte[] bytes, PrickContext ctx) {
         final HashId hash = Utils.hashBytes(bytes);
-        final Path destination = FileNames.objects(prickRoot)
+        final Path destination = ctx.getFiles().getObjects()
                 .resolve(hash.toString().substring(0, 2))
                 .resolve(hash.toString());
         if (!Files.isRegularFile(destination, LinkOption.NOFOLLOW_LINKS)) {
