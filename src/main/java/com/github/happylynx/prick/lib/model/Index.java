@@ -1,11 +1,10 @@
 package com.github.happylynx.prick.lib.model;
 
-import com.github.happylynx.prick.lib.Utils;
+import com.github.happylynx.prick.lib.LibUtils;
 import com.github.happylynx.prick.lib.commands.FileFormats;
 import com.github.happylynx.prick.lib.commands.PrickContext;
 
 import java.nio.file.Path;
-import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
@@ -38,7 +37,7 @@ public class Index {
     }
 
     public static Index fromDisk(Path root, PrickContext ctx, Index oldIndex) {
-        final SortedMap<Path, IndexItem> indexItems = Utils.dirStream(root)
+        final SortedMap<Path, IndexItem> indexItems = LibUtils.dirStream(root)
                 .parallel()
                 .map(fsEntry -> IndexItem.fromFsEntry(fsEntry, ctx, oldIndex))
                 .collect(toSortedMap());

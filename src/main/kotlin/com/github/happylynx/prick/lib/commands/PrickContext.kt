@@ -2,7 +2,7 @@ package com.github.happylynx.prick.lib.commands
 
 import com.github.happylynx.prick.lib.FileNames
 import com.github.happylynx.prick.lib.LockedByOtherProcessException
-import com.github.happylynx.prick.lib.Utils
+import com.github.happylynx.prick.lib.LibUtils
 import java.io.IOException
 import java.nio.charset.StandardCharsets
 import java.nio.file.*
@@ -10,7 +10,7 @@ import java.nio.file.*
 class PrickContext(val rootDir: Path) {
 
     init {
-        val isPrickRoot = Utils.isPrickRoot(rootDir)
+        val isPrickRoot = LibUtils.isPrickRoot(rootDir)
         if (!isPrickRoot) {
             throw RuntimeException("Directory '$rootDir' is not a prick directory.")
         }
@@ -89,7 +89,7 @@ class PrickContext(val rootDir: Path) {
 
     companion object {
         fun fromWorkingPath(workingPath: Path): PrickContext {
-            return PrickContext(Utils.findPrickRoot(workingPath))
+            return PrickContext(LibUtils.findPrickRoot(workingPath))
         }
     }
 }

@@ -16,11 +16,11 @@ import java.util.*;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-public class Utils {
+public class LibUtils {
 
     private static final int MEGA = 1024 * 1024;
 
-    private Utils() {}
+    private LibUtils() {}
 
     public static HashId hashFile(final Path path) {
         return hashToString(hashFileToBytes(path));

@@ -1,6 +1,6 @@
 package com.github.happylynx.prick.lib.walking;
 
-import com.github.happylynx.prick.lib.Utils;
+import com.github.happylynx.prick.lib.LibUtils;
 import com.github.happylynx.prick.lib.model.FsEntryType;
 import com.github.happylynx.prick.lib.model.HashId;
 
@@ -10,12 +10,12 @@ import java.util.stream.Stream;
 public enum FsNonDirEntryType implements FsEntryType {
     FILE("f") {
         public HashId hash(Path file) {
-            return Utils.hashFile(file);
+            return LibUtils.hashFile(file);
         }
     },
     SYMLINK("l") {
         public HashId hash(Path symlink) {
-            return Utils.hashSymlink(symlink);
+            return LibUtils.hashSymlink(symlink);
         }
     };
 
