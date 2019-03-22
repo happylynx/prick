@@ -3,6 +3,7 @@ package com.github.happylynx.prick.lib.commands
 import com.github.happylynx.prick.lib.FileNames
 import com.github.happylynx.prick.lib.LockedByOtherProcessException
 import com.github.happylynx.prick.lib.LibUtils
+import com.github.happylynx.prick.lib.PrickException
 import java.io.IOException
 import java.nio.charset.StandardCharsets
 import java.nio.file.*
@@ -89,7 +90,9 @@ class PrickContext(val rootDir: Path) {
 
     companion object {
         fun fromWorkingPath(workingPath: Path): PrickContext {
-            return PrickContext(LibUtils.findPrickRoot(workingPath))
+            val prickRoot = LibUtils.findPrickRoot(workingPath)
+                    ?: throw PrickException("Path '$workingPath' is not inside a prick directory.")
+            return PrickContext(prickRoot)
         }
     }
 }

@@ -18,6 +18,7 @@ object Help {
         """.trimIndent())
     }
 
+    @JvmOverloads
     fun init(printStream: PrintStream = System.err) {
         printStream.println("""
             Usage:
@@ -28,6 +29,20 @@ object Help {
 
             Parameter:
             dir - directory to initialize. Current working directory is used if unspecified.
+        """.trimIndent())
+    }
+
+
+    @JvmOverloads
+    fun general(printStream: PrintStream = System.err) {
+        printStream.println("""
+            Usage: prick [--help | --prick-version]
+                         commands [args...]
+            Commands:
+                help    Print command usage help
+                init    Initialize directory to be a synchronization root
+                sync    Synchronizes selected directories
+                snapshot Create a snapshot of content of the prick directory
         """.trimIndent())
     }
 }
