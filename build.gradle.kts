@@ -26,7 +26,6 @@ dependencies {
 
     testImplementation(group = "org.junit.jupiter", name = "junit-jupiter-api", version = "5.4.1")
     testImplementation(group = "org.junit.jupiter", name = "junit-jupiter-engine", version = "5.4.1")
-//    testImplementation(group = "org.junit.jupiter", name = "junit-jupiter-launcher", version = "5.4.1")
 }
 
 /*
@@ -62,21 +61,27 @@ dependencies {
         </dependency> 
  */
 
-tasks.jar {
-    manifest {
-        attributes(
-                "Implementation-Version" to 0.1,
-                "Main-Class" to "com.github.happylynx.prick.cli.Main"
-        )
+tasks {
+    jar {
+        manifest {
+            attributes(
+                    "Implementation-Version" to 0.1,
+                    "Main-Class" to "com.github.happylynx.prick.cli.Main"
+            )
+        }
+
+        from(configurations.runtimeClasspath.get().map { if (it.isDirectory) it else zipTree(it) })
     }
 
-    from(configurations.runtimeClasspath.get().map { if (it.isDirectory) it else zipTree(it) })
+    named<Test>("test") {
+        useJUnitPlatform()
+    }
+
+    withType<KotlinCompile> {
+        kotlinOptions.jvmTarget = "1.8"
+    }
 }
 
 application {
     mainClassName = "com.github.happylynx.prick.cli.Main"
-}
-
-tasks.withType<KotlinCompile> {
-    kotlinOptions.jvmTarget = "1.8"
 }
