@@ -10,14 +10,29 @@ public class FileNames {
         return prickDir(prickRoot).resolve("lock");
     }
 
+    /**
+     * Copy of the last snapshot
+     *
+     * <p>It may not exist</p>
+     */
     public static Path index(Path prickRoot) {
         return prickDir(prickRoot).resolve("index");
     }
 
+    /**
+     * Object storage. A directory.
+     *
+     * <p>It may not exist</p>
+     */
     public static Path objects(Path prickRoot) {
         return prickDir(prickRoot).resolve("objects");
     }
 
+    /**
+     * Link to the latest snapshot
+     *
+     * <p>It may not exist</p>
+     */
     public static Path head(Path prickRoot) {
         return prickDir(prickRoot).resolve("head");
     }

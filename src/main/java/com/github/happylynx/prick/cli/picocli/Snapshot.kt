@@ -1,8 +1,11 @@
 package com.github.happylynx.prick.cli.picocli
 
+import com.github.happylynx.prick.cli.CliUtils
+import com.github.happylynx.prick.lib.PrickException
 import com.github.happylynx.prick.lib.commands.PrickContext
 import com.github.happylynx.prick.lib.commands.SnapshotCommand
 import picocli.CommandLine
+import java.lang.IllegalStateException
 import java.nio.file.Path
 
 @CommandLine.Command(name = "snapshot")
@@ -30,8 +33,14 @@ class Snapshot() : Runnable, WithHelp {
         }
         println("Running snapshot command")
         val normalizedSnapshotRoot = snapshotRoot.toAbsolutePath().normalize()
-        println("snapshot root: $normalizedSnapshotRoot")
-        println(main.prickDir)
-        SnapshotCommand(PrickContext.fromWorkingPath(normalizedSnapshotRoot), normalizedSnapshotRoot).run()
+
+        val prickContext: PrickContext
+        try {
+            prickContext = PrickContext.fromWorkingPath(normalizedSnapshotRoot)
+        } catch (e: PrickException) {
+            CliUtils.die(e.message!!)
+            throw IllegalStateException()
+        }
+        SnapshotCommand(prickContext, normalizedSnapshotRoot).run()
     }
 }

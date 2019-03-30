@@ -15,6 +15,7 @@ public class IndexToTree {
         this.ctx = ctx;
     }
 
+    // TODO fix: Index doesn't contain dirs
     public static HashId writeTree(Index index, PrickContext ctx) {
         final IndexToTree indexToTree = new IndexToTree(ctx);
         index.getItems().stream().forEachOrdered(indexToTree::nextItem);

@@ -25,6 +25,7 @@ public class ObjectStorage {
                 .resolve(hash.toString());
         if (!Files.isRegularFile(destination, LinkOption.NOFOLLOW_LINKS)) {
             try {
+                Files.createDirectories(destination.getParent());
                 Files.write(destination, bytes, StandardOpenOption.WRITE, StandardOpenOption.CREATE_NEW);
             } catch (IOException ex) {
                 throw new RuntimeException(ex);

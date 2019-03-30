@@ -9,6 +9,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Stack;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class DirectoryWalker {
     private final Stack<Path> dfsStack = new Stack<>();
@@ -29,10 +30,12 @@ public class DirectoryWalker {
         while (!dfsStack.isEmpty()) {
             final Path fsItem = dfsStack.pop();
             if (Files.isDirectory(fsItem, LinkOption.NOFOLLOW_LINKS)) {
-                final List<Path> sortedItems = Files.list(fsItem)
-                        .sorted(Comparator.<Path>naturalOrder().reversed())
-                        .collect(Collectors.toList());
-                dfsStack.addAll(sortedItems);
+                try (Stream<Path> listing = Files.list(fsItem)) {
+                    final List<Path> sortedItems =listing
+                            .sorted(Comparator.<Path>naturalOrder().reversed())
+                            .collect(Collectors.toList());
+                    dfsStack.addAll(sortedItems);
+                }
                 continue;
             }
             final BasicFileAttributes basicFileAttributes =

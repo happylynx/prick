@@ -4,7 +4,10 @@ import com.github.happylynx.prick.cli.Command
 import picocli.CommandLine
 
 @CommandLine.Command(
-        subcommands = [ Snapshot::class ]
+        subcommands = [
+            Snapshot::class,
+            Init::class
+        ]
 )
 class Main() {
 

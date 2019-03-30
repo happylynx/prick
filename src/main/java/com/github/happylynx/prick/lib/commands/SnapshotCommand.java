@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
-import java.util.Collections;
 import java.util.stream.Stream;
 
 /**
@@ -43,7 +42,7 @@ public class SnapshotCommand {
     }
 
     private void runLocked() {
-        Index newIndex = createUpdatedIndex();
+        final Index newIndex = createUpdatedIndex();
         storeIndex(newIndex);
         commitIndex(newIndex);
     }
@@ -63,6 +62,7 @@ public class SnapshotCommand {
 
     private HashId createCommitFileUnchecked(HashId rootTreeId) throws IOException {
         final Path headFile = ctx.getFiles().getHead();
+        headFile.toFile().createNewFile();
         final String currentCommitId = Files.readString(headFile);
         final String commitContent = FileFormats.createCommit(rootTreeId, currentCommitId);
         final HashId commitHash = ObjectStorage.store(commitContent, ctx);
@@ -92,7 +92,7 @@ public class SnapshotCommand {
         try (Stream<String> lines = Files.lines(indexPath)) {
             return Index.fromLines(lines);
         } catch (NoSuchFileException e) {
-            return new Index(Collections.emptySortedMap(), Path.of(""));
+            return Index.empty();
         } catch (IOException e) {
             throw new RuntimeException(String.format("Index file '%s' can't be read.", indexPath), e);
         }
