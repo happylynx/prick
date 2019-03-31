@@ -7,9 +7,13 @@ import picocli.CommandLine
         subcommands = [
             Snapshot::class,
             Init::class
+//            Sync::class,
+//            Log::class,
+//            Prune::class,
+//            Verify::class
         ]
 )
-class Main() {
+class Main {
 
     @CommandLine.Option(names = ["-v", "--version"], versionHelp = true, description = ["Print version"])
     var version: Boolean = false

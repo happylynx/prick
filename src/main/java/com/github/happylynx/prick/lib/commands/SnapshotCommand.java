@@ -64,8 +64,8 @@ public class SnapshotCommand {
         final Path headFile = ctx.getFiles().getHead();
         headFile.toFile().createNewFile();
         final String currentCommitId = Files.readString(headFile);
-        final String commitContent = FileFormats.createCommit(rootTreeId, currentCommitId);
-        final HashId commitHash = ObjectStorage.store(commitContent, ctx);
+        final String commitContent = FileFormats.INSTANCE.createCommit(rootTreeId, currentCommitId);
+        final HashId commitHash = ObjectStorage.INSTANCE.store(commitContent, ctx);
         Files.writeString(headFile, commitHash.toString());
         return commitHash;
     }

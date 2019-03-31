@@ -11,6 +11,9 @@ import java.util.stream.Collectors
 
 internal class TreeComparator(originalRoot: Path) {
 
+    /**
+     * relative path to item
+     */
     private val items: Map<Path, Item>
 
     init {
@@ -57,6 +60,9 @@ internal class TreeComparator(originalRoot: Path) {
 
     private sealed class Item {
 
+        /**
+         * absolute path
+         */
         abstract val path: Path
         abstract val changeTime: Instant
 
@@ -102,7 +108,7 @@ internal class TreeComparator(originalRoot: Path) {
         }
     }
 
-    data class Difference(val item: Path, val type: String)
+    data class Difference(/** Absolute path*/ val item: Path, val type: String)
 
 }
 

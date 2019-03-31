@@ -33,7 +33,7 @@ public class IndexToTree {
 
     private HashId getResult() {
         if (stack.isEmpty()) {
-            return ObjectStorage.store("", ctx);
+            return ObjectStorage.INSTANCE.store("", ctx);
         }
         return stack.pop().getHash();
     }
@@ -54,10 +54,8 @@ public class IndexToTree {
     }
 
     private TreeHash computeNStoreTree(List<TreeItem> items) {
-        final String treeFileContent = items.stream()
-                .map(FileFormats::createTreeLine)
-                .collect(Collectors.joining(FileFormats.LINE_SEPARATOR));
-        final HashId treeHash = ObjectStorage.store(treeFileContent, ctx);
+        final byte[] treeFileContent = FileFormats.Tree.INSTANCE.serialize(items);
+        final HashId treeHash = ObjectStorage.INSTANCE.store(treeFileContent, ctx);
         return new TreeHash(treeHash, items.get(0).getPath().getParent());
     }
 

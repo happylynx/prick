@@ -27,11 +27,18 @@ public class LibUtils {
     }
 
     public static HashId hashSymlink(final Path symlink) {
-        return hashToString(createMessageDigest().digest(symlink.toString().getBytes()));
+        final Path targetPath;
+        try {
+            targetPath = Files.readSymbolicLink(symlink);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return hashToString(createMessageDigest().digest(targetPath.toString().getBytes(StandardCharsets.UTF_8)));
     }
 
     private static byte[] hashFileToBytes(final Path path) {
-        try (SeekableByteChannel byteChannel = Files.newByteChannel(path, LinkOption.NOFOLLOW_LINKS, StandardOpenOption.READ)) {
+        try (SeekableByteChannel byteChannel =
+                     Files.newByteChannel(path, LinkOption.NOFOLLOW_LINKS, StandardOpenOption.READ)) {
             return hashByteChannelToBytes(byteChannel);
         } catch (IOException | NoSuchAlgorithmException ex) {
             throw new RuntimeException(ex);
@@ -133,37 +140,6 @@ public class LibUtils {
             throw new RuntimeException("This should never happen.", e);
         }
     }
-
-    // TODO delete
-//    public static void withLock(Runnable task, Path prickRoot) {
-//        final UUID lockId = UUID.randomUUID();
-//        try {
-//            Singleton.INSTANCE.lockers.add(lockId);
-//            if (!Singleton.INSTANCE.fileLocked.get()) {
-//                lock(prickRoot);
-//            }
-//            task.run();
-//        }
-//        finally {
-//            Singleton.INSTANCE.lockers.remove(lockId);
-//            freeLock(prickRoot);
-//        }
-//    }
-
-    // TODO delete
-//    private static void freeLock(Path prickRoot) {
-//        synchronized (Singleton.INSTANCE.fileLocked) {
-//            if (!Singleton.INSTANCE.lockers.isEmpty()) {
-//                return;
-//            }
-//            try {
-//                Files.delete(FileNames.lock(prickRoot));
-//            } catch (IOException e) {
-//                throw new RuntimeException(e);
-//            }
-//            Singleton.INSTANCE.fileLocked.set(false);
-//        }
-//    }
 
     private static Iterator<FsEntry> dirIterator(Path root) {
         final DirectoryWalker directoryWalker = new DirectoryWalker(root);

@@ -10,34 +10,12 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-public class IndexItem implements TreeItem {
-    /**
-     * relative to the prick root
-     */
-    private final Path path;
-    private final HashId contentHash;
+public class IndexItem extends NonDirItemHash {
     private final Instant changeTime;
-    private final FsNonDirEntryType type;
 
     public IndexItem(Path path, HashId contentHash, Instant changeTime, FsNonDirEntryType type) {
-        this.path = path;
-        this.contentHash = contentHash;
+        super(path, type, contentHash);
         this.changeTime = changeTime;
-        this.type = type;
-    }
-
-    public Path getPath() {
-        return path;
-    }
-
-    @Override
-    public FsEntryType getType() {
-        return type;
-    }
-
-    @Override
-    public HashId getHash() {
-        return contentHash;
     }
 
     public Instant getChangeTime() {
@@ -45,7 +23,7 @@ public class IndexItem implements TreeItem {
     }
 
     public String toLine() {
-        return String.format("%s\0%s\0%d\0%s", contentHash, type, changeTime.getEpochSecond(), getPathString());
+        return String.format("%s\0%s\0%d\0%s", getHash(), getType(), changeTime.getEpochSecond(), getPathString());
     }
 
     public static IndexItem fromLine(String line) {
@@ -58,7 +36,7 @@ public class IndexItem implements TreeItem {
     }
 
     private String getPathString() {
-        return StreamSupport.stream(path.spliterator(), false)
+        return StreamSupport.stream(getPath().spliterator(), false)
                 .map(Path::toString)
                 .collect(Collectors.joining("/"));
     }
