@@ -6,6 +6,8 @@ import com.github.happylynx.prick.lib.model.FsDirType
 import com.github.happylynx.prick.lib.model.HashId
 import com.github.happylynx.prick.lib.model.Index
 import com.github.happylynx.prick.lib.model.TreeItem
+import com.github.happylynx.prick.lib.model.model2.IndexToTree
+import com.github.happylynx.prick.lib.model.model2.TreeItem
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
@@ -31,7 +33,7 @@ class IndexToTreeTest {
     fun emptyIndex() {
         val treeComparator = TreeComparator(ctx.rootDir)
 
-        val treeHash: HashId = IndexToTree.writeTree(Index.empty(), this.ctx)
+        val treeHash: HashId = IndexToTree.run(Index.empty(), ctx)
 
         assertTreeObjectExists(treeHash)
         assertTreeContentMatchesToFs(treeHash)
@@ -40,12 +42,28 @@ class IndexToTreeTest {
 
     @Test
     fun nonEmptyIndex() {
-        // TODO
+        createSampleContent()
+        val index: Index = Index.fromDisk(ctx.rootDir, ctx, Index.empty())
+        val treeComparator: TreeComparator = TreeComparator(ctx.rootDir)
+
+        val treeHash: HashId = IndexToTree.run(index, ctx)
+
+        assertTreeObjectExists(treeHash)
+        assertTreeContentMatchesToFs(treeHash)
+        assertDirectoryContentUnchanged(treeComparator)
     }
 
     @Test
     fun nonEmptyIndexPreviousCommits() {
         // TODO
+    }
+
+    private fun createSampleContent() {
+        Files.createDirectories(ctx.rootDir.resolve("dirA").resolve("dirB"))
+        Files.write(ctx.rootDir.resolve("emptyFile"), ByteArray(0))
+        val dirC = Files.createDirectory(ctx.rootDir.resolve("dirC"))
+        Files.writeString(dirC.resolve("foo"), "bar")
+        Files.writeString(dirC.resolve("hello"), "world")
     }
 
     private fun readTreeRecursively(tree: HashId) : List<TreeItem> {
@@ -57,7 +75,7 @@ class IndexToTreeTest {
             val treeBytes: ByteArray = ObjectStorage.read(treeHash, ctx)
             val items: List<TreeItem> = FileFormats.Tree.parse(treeBytes, path)
             result.addAll(items)
-            dirsToProcess.addAll(items.filter { it.type == FsDirType.DIRECTORY }.map { it.hash to it.path })
+            dirsToProcess.addAll(items.filter { it is TreeItem.TreeDirectory }.map { it.hash to it.path })
         }
         return result
     }

@@ -2,12 +2,11 @@ package com.github.happylynx.prick.lib.commands;
 
 import com.github.happylynx.prick.lib.model.HashId;
 import com.github.happylynx.prick.lib.model.Index;
+import com.github.happylynx.prick.lib.model.model2.IndexToTree;
 
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
-import java.util.stream.Stream;
 
 /**
  * inputs:
@@ -42,13 +41,21 @@ public class SnapshotCommand {
     }
 
     private void runLocked() {
+        // TODO rework
+        // 1. load cache (only files and symlinks) - path, mod date, hash, type
+        // 2. create index
+        // 3. update cache
+        // 4. write tree
+        // 5. write commit
+        // 6. update head
+
         final Index newIndex = createUpdatedIndex();
-        storeIndex(newIndex);
+        newIndex.toFile(ctx.getFiles().getIndex());
         commitIndex(newIndex);
     }
 
     private HashId commitIndex(Index index) {
-        HashId rootTreeId = IndexToTree.writeTree(index, ctx);
+        HashId rootTreeId = IndexToTree.Companion.run(index, ctx);
         return createCommitFile(rootTreeId);
     }
 
@@ -70,32 +77,17 @@ public class SnapshotCommand {
         return commitHash;
     }
 
-    private void storeIndex(Index index) {
-        try {
-            Files.write(ctx.getFiles().getIndex(), index.toLines().getBytes());
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     private Index createUpdatedIndex() {
         final Index oldIndex = loadIndex();
-        final Index newPartialIndex = Index.fromDisk(ctx.getRootDir().resolve(relativeSnapshotRoot), ctx, oldIndex);
+        final Index newPartialIndex = Index.Companion.fromDisk(ctx.getRootDir().resolve(relativeSnapshotRoot), ctx, oldIndex);
         final Index newIndex = oldIndex.combineWith(newPartialIndex);
         return newIndex;
 
     }
 
     private Index loadIndex() {
-        // TODO use FileFormats
         final Path indexPath = ctx.getFiles().getIndex();
-        try (Stream<String> lines = Files.lines(indexPath)) {
-            return Index.fromLines(lines);
-        } catch (NoSuchFileException e) {
-            return Index.empty();
-        } catch (IOException e) {
-            throw new RuntimeException(String.format("Index file '%s' can't be read.", indexPath), e);
-        }
+        return Index.Companion.fromFile(indexPath);
     }
 
     public static class Params {

@@ -11,6 +11,7 @@ import java.util.Stack;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+// TODO consider deletion
 public class DirectoryWalker {
     private final Stack<Path> dfsStack = new Stack<>();
 
@@ -49,4 +50,5 @@ public class DirectoryWalker {
         }
         return null;
     }
+
 }
