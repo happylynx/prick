@@ -1,11 +1,10 @@
 package com.github.happylynx.prick.lib.commands
 
 import com.github.happylynx.prick.lib.LibUtils
+import com.github.happylynx.prick.lib.PathUtils
 import com.github.happylynx.prick.lib.TreeComparator
-import com.github.happylynx.prick.lib.model.FsDirType
 import com.github.happylynx.prick.lib.model.HashId
 import com.github.happylynx.prick.lib.model.Index
-import com.github.happylynx.prick.lib.model.TreeItem
 import com.github.happylynx.prick.lib.model.model2.IndexToTree
 import com.github.happylynx.prick.lib.model.model2.TreeItem
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -13,11 +12,16 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
-import java.lang.IllegalStateException
 import java.nio.file.Files
 import java.nio.file.Path
-import java.util.*
+import java.util.LinkedList
+import java.util.Queue
+import java.util.Spliterator
+import java.util.Spliterators
+import java.util.Stack
 import java.util.stream.Collectors
+import java.util.stream.Stream
+import java.util.stream.StreamSupport
 
 class IndexToTreeTest {
 
@@ -66,30 +70,65 @@ class IndexToTreeTest {
         Files.writeString(dirC.resolve("hello"), "world")
     }
 
-    private fun readTreeRecursively(tree: HashId) : List<TreeItem> {
-        val result = mutableListOf<TreeItem>()
-        val dirsToProcess = Stack<Pair<HashId, Path>>()
-        dirsToProcess.push(tree to Path.of(""))
-        while (!dirsToProcess.isEmpty()) {
-            val (treeHash, path) = dirsToProcess.pop()
-            val treeBytes: ByteArray = ObjectStorage.read(treeHash, ctx)
-            val items: List<TreeItem> = FileFormats.Tree.parse(treeBytes, path)
-            result.addAll(items)
-            dirsToProcess.addAll(items.filter { it is TreeItem.TreeDirectory }.map { it.hash to it.path })
+    private fun readTreeRecursively(tree: HashId) : Stream<Pair<Path, TreeItem>> {
+        val iterator: Iterator<Pair<Path, TreeItem>> = object : Iterator<Pair<Path, TreeItem>> {
+
+            val stack = Stack<Pair<Path, HashId>>()
+            val output: Queue<Pair<Path, TreeItem>> = LinkedList()
+
+            init {
+                stack.push(Path.of("") to tree)
+            }
+
+            override fun hasNext(): Boolean {
+                if (output.isNotEmpty()) {
+                    return true
+                }
+                computeNext()
+                return output.isNotEmpty()
+            }
+
+            override fun next(): Pair<Path, TreeItem> {
+                if (!hasNext()) {
+                    throw IllegalStateException()
+                }
+                return output.remove()
+            }
+
+            fun computeNext() {
+                if (stack.isEmpty()) {
+                    return
+                }
+                val (path, hash) = stack.pop()
+                val children = readDirTree(hash).map { path.resolve(it.name) to it }
+                stack.addAll(children.filter { it.second is TreeItem.TreeDirectory }.map {it.first to it.second.hash})
+                output.addAll(children)
+            }
         }
-        return result
+        return StreamSupport.stream(Spliterators.spliterator(iterator, Long.MAX_VALUE, Spliterator.ORDERED), false)
+    }
+
+    private fun readDirTree(dirHash: HashId): List<TreeItem> {
+        val data = ObjectStorage.read(dirHash, ctx)
+        return FileFormats.Tree.parse(data)
     }
 
     private fun assertDirectoryContentUnchanged(treeComparator: TreeComparator) {
+        val hashOfEmpty = LibUtils.hashBytes(ByteArray(0)).toString()
         val unexpectedChanges = treeComparator.compareTo(ctx.rootDir)
-                .filter {  !it.item.startsWith(ctx.files.objects) }
-        assertTrue(unexpectedChanges.isEmpty())
+                .filter {
+                    !PathUtils.equalsNormalized(it.item, ctx.files.objects)
+                            && !PathUtils.equalsNormalized(it.item, ctx.files.objects.resolve(hashOfEmpty.substring(0, 2)))
+                            && !PathUtils.equalsNormalized(it.item, ctx.files.objects.resolve(hashOfEmpty.substring(0, 2)).resolve(hashOfEmpty))
+                            && !(PathUtils.equalsNormalized(it.item, ctx.files.prickDir) && it.type == TreeComparator.DiffType.MOD_TIME_CHANGED)
+                }
+        assertTrue(unexpectedChanges.isEmpty(), "Unexpected changes: $unexpectedChanges")
     }
 
     private fun assertTreeContentMatchesToFs(treeHash: HashId) {
         val fsContent = Files.walk(ctx.rootDir).use { it
                 .map { path -> ctx.rootDir.relativize(path) }
-                .filter { Files.isSameFile(it, Path.of(".")) } // ignore root directory
+                .filter { it.normalize() != Path.of("").normalize() } // ignore root directory
                 .filter { path -> !path.startsWith(".prick") } // default ignore
                 .map(::pathToLine)
                 .collect(Collectors.toSet())
@@ -123,14 +162,18 @@ class IndexToTreeTest {
     private fun assertTreeObjectExists(treeHash: HashId) {
         val objectFilePath = ctx.files.objects.resolve(treeHash.toString().substring(0, 2)).resolve(treeHash.toString())
         assertTrue(Files.isRegularFile(objectFilePath))
-        assertTrue(Files.readString(objectFilePath).isNotEmpty())
     }
 
     private fun treeToLineSet(rootTree: HashId): Set<String> {
         return readTreeRecursively(rootTree)
                 .map {
-                    val hash = if (it.type == FsDirType.DIRECTORY) "-" else it.hash.toString()
-                    "$hash | ${it.type} | ${it.path.fileName}"
-                }.toSet()
+                    val hash = if (it.second is TreeItem.TreeDirectory) "-" else it.second.hash.toString()
+                    val type = when(it.second) {
+                        is TreeItem.TreeDirectory -> "d"
+                        is TreeItem.TreeFile -> "f"
+                        is TreeItem.TreeSymlink -> "s"
+                    }
+                    "$hash | $type | ${it.first}"
+                }.collect(Collectors.toSet())
     }
 }

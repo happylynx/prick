@@ -35,20 +35,21 @@ internal class TreeComparator(originalRoot: Path) {
     fun compareTo(otherRoot: Path): Set<Difference> {
         val remainingOriginal = items.toMutableMap()
         val differences = mutableSetOf<Difference>()
-        Files.walk(otherRoot)
-                .forEach { other ->
-                    val otherPath = otherRoot.relativize(other).normalize()
-                    val originalItem = remainingOriginal.remove(otherPath)
-                    if (originalItem == null) {
-                        differences.add(Difference(otherPath, "Extra in other"))
-                        return@forEach
-                    }
-                    val difference = originalItem.compareTo(other)
-                    if (difference != null) {
-                        differences.add(difference)
-                    }
+        Files.walk(otherRoot).use { it
+            .forEach { other ->
+                val otherPath = otherRoot.relativize(other).normalize()
+                val originalItem = remainingOriginal.remove(otherPath)
+                if (originalItem == null) {
+                    differences.add(Difference(otherPath, DiffType.EXTRA_IN_OTHER))
+                    return@forEach
                 }
-        val extraInOriginalDifferences = remainingOriginal.keys.map { Difference(it, "Extra in original") }
+                val difference = originalItem.compareTo(other)
+                if (difference != null) {
+                    differences.add(difference)
+                }
+            }
+        }
+        val extraInOriginalDifferences = remainingOriginal.keys.map { Difference(it, DiffType.EXTRA_IN_ORIGINAL) }
         differences.addAll(extraInOriginalDifferences)
         return differences
     }
@@ -79,15 +80,15 @@ internal class TreeComparator(originalRoot: Path) {
             override fun compareTo(other: Path): Difference? {
                 val otherAttributes = getAttributes(other)
                 if (!otherAttributes.isRegularFile) {
-                    return Difference(path, "Original is a file. Other is not.")
+                    return Difference(path, DiffType.WAS_FILE_TYPE_CHANGED)
                 }
                 val changeTimeSame = changeTime == otherAttributes.lastModifiedTime().toInstant()
                 if (!changeTimeSame) {
-                    return Difference(path, "Change times differ")
+                    return Difference(path, DiffType.MOD_TIME_CHANGED)
                 }
                 val contentSame = Arrays.equals(contentHash, hashFile(other))
                 if (!contentSame) {
-                    return Difference(path, "Different content")
+                    return Difference(path, DiffType.CONTENT_CHANGED)
                 }
                 return null
             }
@@ -97,18 +98,27 @@ internal class TreeComparator(originalRoot: Path) {
             override fun compareTo(other: Path): Difference? {
                 val otherAttributes = getAttributes(other)
                 if (!otherAttributes.isDirectory) {
-                    return Difference(path, "Original is a directory. Other is not.")
+                    return Difference(path, DiffType.WAS_DIR_TYPE_CHANGED)
                 }
                 val changeTimeSame = changeTime == otherAttributes.lastModifiedTime().toInstant()
                 if (!changeTimeSame) {
-                    return Difference(path, "Change times differ")
+                    return Difference(path, DiffType.MOD_TIME_CHANGED)
                 }
                 return null
             }
         }
     }
 
-    data class Difference(/** Absolute path*/ val item: Path, val type: String)
+    data class Difference(/** Absolute path*/ val item: Path, val type: DiffType)
+
+    enum class DiffType {
+        MOD_TIME_CHANGED,
+        CONTENT_CHANGED,
+        WAS_FILE_TYPE_CHANGED,
+        WAS_DIR_TYPE_CHANGED,
+        EXTRA_IN_ORIGINAL,
+        EXTRA_IN_OTHER
+    }
 
 }
 

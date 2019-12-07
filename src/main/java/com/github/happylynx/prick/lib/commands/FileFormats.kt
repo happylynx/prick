@@ -48,10 +48,11 @@ object FileFormats {
             return "${item.hash}\u0000${toCode(item)}\u0000${item.name}"
         }
 
-        fun parse(fileContent: ByteArray, dir: Path): List<TreeItem> {
+        fun parse(fileContent: ByteArray): List<TreeItem> {
             return String(fileContent)
                     .split(LINE_SEPARATOR)
-                    .map { parseLine(it, dir) }
+                    .filter { it.trim().isNotEmpty() }
+                    .map(::parseLine)
         }
 
         private val classToCode = mapOf(
@@ -64,7 +65,7 @@ object FileFormats {
             return classToCode.getOrElse(item::class, throw java.lang.IllegalStateException("Unknown item: '$item'"))
         }
 
-        private fun parseLine(line: String, dir: Path): TreeItem {
+        private fun parseLine(line: String): TreeItem {
             val parts = line.split("\u0000")
             val hash = HashId(parts[0])
             val code = parts[1]
