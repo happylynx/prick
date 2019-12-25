@@ -2,6 +2,23 @@ package com.github.happylynx.prick.lib;
 
 import java.nio.file.Path;
 
+/**
+ * Standard repo layout
+ *
+ * <pre>
+ *     repo root
+ *     ├ .prick
+ *     │ ├ head
+ *     │ ├ index
+ *     │ ├ objects
+ *     │ │ ├ xx (prefix)
+ *     │ │ │ └ xxhashobject
+ *     │ │ └ yy (prefix
+ *     │ │   └ yyhashobject
+ *     │ └ lock
+ *     └ working dir file ...
+ * </pre>
+ */
 public class FileNames {
 
     private FileNames() {}
