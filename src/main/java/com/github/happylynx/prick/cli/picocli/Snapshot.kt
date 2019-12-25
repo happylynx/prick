@@ -9,7 +9,7 @@ import java.lang.IllegalStateException
 import java.nio.file.Path
 
 @CommandLine.Command(name = "snapshot")
-class Snapshot() : Runnable, WithHelp {
+class Snapshot() : Runnable {
 
     @CommandLine.Spec
     lateinit var spec: CommandLine.Model.CommandSpec
@@ -28,7 +28,7 @@ class Snapshot() : Runnable, WithHelp {
     lateinit var snapshotRoot: Path
 
     override fun run() {
-        if (processHelp(spec)) {
+        if (PicocliUtils.processHelp(spec)) {
             return
         }
         println("Running snapshot command")

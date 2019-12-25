@@ -6,7 +6,7 @@ import picocli.CommandLine
 import java.nio.file.Path
 
 @CommandLine.Command(name = "init", description = ["Init initializes new prick directory."])
-class Init : Runnable, WithHelp {
+class Init : Runnable {
 
     @CommandLine.ParentCommand
     lateinit var parent: Main
@@ -21,7 +21,7 @@ class Init : Runnable, WithHelp {
     lateinit var path: Path
 
     override fun run() {
-        if (processHelp(spec)) {
+        if (PicocliUtils.processHelp(spec)) {
             return
         }
         val normalizedPath = path.toAbsolutePath().normalize()
