@@ -5,10 +5,11 @@ import java.io.PrintStream
 import java.nio.charset.StandardCharsets
 
 object CliUtils {
-    private const val GENERAL_ERROR_CODE = 1
+    const val GENERAL_ERROR_EXIT_CODE = 1
+    const val SUCCESS_EXIT_CODE = 0
 
     fun die() {
-        System.exit(GENERAL_ERROR_CODE)
+        System.exit(GENERAL_ERROR_EXIT_CODE)
     }
 
     fun die(message: String) {

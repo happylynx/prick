@@ -9,6 +9,7 @@ object Main {
         // TODO remove
         println("args " + Arrays.toString(args))
 
-        Main.run(args)
+        val exitCode = Main.run(args)
+        System.exit(exitCode)
     }
 }

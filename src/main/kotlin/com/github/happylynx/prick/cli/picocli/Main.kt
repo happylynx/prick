@@ -21,28 +21,39 @@ class Main {
     @CommandLine.Option(names = ["-h", "--help"], usageHelp = true, description = ["Print help"])
     var help: Boolean = false
 
-    @CommandLine.Option(names = ["--prick-dir"], description = ["Custom prick root directory"])
+    @CommandLine.Option(names = ["-d", "--directory"], description = ["Custom directory used instead of current working directory"])
     var prickDir: String? = null
 
-    fun run(parseResult: CommandLine.ParseResult) {
+    fun run(parseResult: CommandLine.ParseResult): Int {
         if (parseResult.isUsageHelpRequested) {
             parseResult.asCommandLineList().first().usage(System.out)
-            return
+            return CliUtils.SUCCESS_EXIT_CODE
         }
         if (parseResult.isVersionHelpRequested) {
             CliUtils.printVersion(System.out)
-            return
+            return CliUtils.SUCCESS_EXIT_CODE
         }
-        when (val command = parseResult.asCommandLineList().last()!!.getCommand<Any>()) {
-            is Runnable -> command.run()
+        return when (val command = parseResult.asCommandLineList().last()!!.getCommand<Any>()) {
+            is Runnable -> {
+                command.run()
+                CliUtils.SUCCESS_EXIT_CODE
+            }
+            else -> {
+                parseResult.asCommandLineList().first().usage(System.err)
+                CliUtils.GENERAL_ERROR_EXIT_CODE
+            }
         }
-
     }
 
     companion object {
-        fun run(args: Array<String>) {
+        /**
+         * @return exit code
+         */
+        fun run(args: Array<String>): Int {
             val main = Main()
-            CommandLine(main).parseWithHandler(main::run, args)
+            val commandLine = CommandLine(main)
+            commandLine.setExecutionStrategy(main::run)
+            return commandLine.execute(*args)
         }
     }
 }
