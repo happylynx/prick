@@ -1,6 +1,6 @@
 package com.github.happylynx.prick.cli.picocli
 
-import com.github.happylynx.prick.cli.Command
+import com.github.happylynx.prick.cli.CliUtils
 import picocli.CommandLine
 
 @CommandLine.Command(
@@ -30,7 +30,7 @@ class Main {
             return
         }
         if (parseResult.isVersionHelpRequested) {
-            Command.printVersion(System.out)
+            CliUtils.printVersion(System.out)
             return
         }
         when (val command = parseResult.asCommandLineList().last()!!.getCommand<Any>()) {
