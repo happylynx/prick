@@ -21,9 +21,6 @@ class Main {
     @CommandLine.Option(names = ["-h", "--help"], usageHelp = true, description = ["Print help"])
     var help: Boolean = false
 
-    @CommandLine.Option(names = ["-d", "--directory"], description = ["Custom directory used instead of current working directory"])
-    var prickDir: String? = null
-
     fun run(parseResult: CommandLine.ParseResult): Int {
         if (parseResult.isUsageHelpRequested) {
             parseResult.asCommandLineList().first().usage(System.out)

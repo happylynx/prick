@@ -78,6 +78,11 @@ class PrickContext(val rootDir: Path) {
         createLockFile(true)
     }
 
+    override fun toString(): String {
+        return "PrickContext(rootDir=$rootDir, isLocked=$isLocked)"
+    }
+
+
     val files = Files()
 
     inner class Files internal constructor() {
